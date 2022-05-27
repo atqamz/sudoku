@@ -12,14 +12,14 @@ using namespace std;
 
 DONE: Buat fungsi save ke file .txt
 DONE: Buat fungsi load dari file .txt
+DONE: Buat Struct player
 DONE: Perbaiki fungsi play
 DONE: Cek vertikal
 DONE: Cek horizontal
 DONE: Cek regional/box
-DONE: Buat fungsi isWin
 DONE: Buat fungsi isCase
-DONE: Buat fungsi gameOver
-DONE: Buat Struct player
+DONE: Buat fungsi isWin
+DONE: Buat fungsi isLose
 DONE: Warna pada SOAL(Default)
 */
 
@@ -41,6 +41,7 @@ void menu();
 struct player
 {
   string username;
+  int health = 5;
   string sudokuCase;
   int sudoku[SONGO][SONGO];
 };
@@ -52,39 +53,55 @@ void play(player player)
     system("cls");
     int sudokuCase[SONGO][SONGO];
     getCase(sudokuCase, player.sudokuCase);
+    int sudokuAns[SONGO][SONGO];
+    getCase(sudokuAns, player.sudokuCase);
 
-    printSudoku(player.sudoku, sudokuCase);
-    if (isWin(player.sudoku))
-      break;
-
-    cout << "[X Y] (1 >= X, Y <= 9) || [0 to exit]\n";
-    int row, col;
-
-    cin >> col;
-    if (col == 0)
+    if (getSudokuAns(sudokuAns, 0, 0))
     {
-      saveCase(player.sudoku, player.sudokuCase, player.username);
-      break;
-    }
-    cin >> row;
+      printSudoku(player.sudoku, sudokuCase, sudokuAns, player.health);
+      if (isWin(player.sudoku))
+        break;
+      if (isLose(player.health))
+        break;
 
-    if (isCase(sudokuCase, row - 1, col - 1))
-      continue;
+      cout << "[X Y] (1 >= X, Y <= 9) || [0 to exit]\n";
+      int row, col;
 
-    cout << "[answer] (1 >= answer <= 9)\n";
-    int answer;
-    cin >> answer;
-    if (isValidNumber(answer))
-    {
-      if (isValidAnswer(player.sudoku, row - 1, col - 1, answer))
+      cin >> col;
+      if (col == 0)
       {
-        player.sudoku[row - 1][col - 1] = answer;
+        saveCase(player.sudoku, player.sudokuCase, player.username);
+        break;
+      }
+      cin >> row;
+
+      if (isCase(sudokuCase, row - 1, col - 1))
+        continue;
+
+      cout << "[answer] (1 >= answer <= 9)\n";
+      int answer;
+      cin >> answer;
+      if (isValidNumber(answer))
+      {
+        if (isValidAnswer(player.sudoku, row - 1, col - 1, answer))
+        {
+          if (!isCorrect(sudokuAns, row - 1, col - 1, answer))
+            player.health--;
+
+          player.sudoku[row - 1][col - 1] = answer;
+        }
+        else
+        {
+          player.health--;
+        }
       }
     }
   }
 
   if (isWin(player.sudoku))
     cout << "You Win!\n";
+  else if (isLose(player.health))
+    cout << "Game Over\n";
   else
     menu();
 }
