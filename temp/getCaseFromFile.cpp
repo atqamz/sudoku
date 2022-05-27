@@ -2,11 +2,11 @@
 #include <fstream>
 #include <ctime>
 #include <cstdlib>
-#define N 9
+#define SONGO 9
 
 using namespace std;
 
-int sudoku[N][N];
+int sudoku[SONGO][SONGO];
 
 string randomCase()
 {
@@ -17,13 +17,13 @@ string randomCase()
 
 void getCase(string fileName = randomCase())
 {
-  ifstream inFile("../case/" + fileName + ".txt");
+  ifstream readFile("../case/" + fileName + ".txt");
 
-  for (int i = 0; i < N; i++)
+  for (int i = 0; i < SONGO; i++)
   {
-    inFile >> sudoku[i][0] >> sudoku[i][1] >> sudoku[i][2] >> sudoku[i][3] >> sudoku[i][4] >> sudoku[i][5] >> sudoku[i][6] >> sudoku[i][7] >> sudoku[i][8];
+    readFile >> sudoku[i][0] >> sudoku[i][1] >> sudoku[i][2] >> sudoku[i][3] >> sudoku[i][4] >> sudoku[i][5] >> sudoku[i][6] >> sudoku[i][7] >> sudoku[i][8];
   }
-  inFile.close();
+  readFile.close();
 
   // tampilkan kasus
   // for (int i = 0; i < N; i++)

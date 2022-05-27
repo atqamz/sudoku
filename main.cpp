@@ -1,203 +1,168 @@
 #include <iostream>
-#include <fstream>
+#include "header/fileHandler.h"
+#include "header/checkHandler.h"
+#include "header/outHandler.h"
 
-#define N 9
+#define SONGO 9
 
 using namespace std;
 
-// TODO: Buat fungsi save ke file .txt
-// TODO: Buat fungsi load dari file .txt
-// TODO: Perbaiki fungsi play, pisah ke fungsi generateBoard
-// DONE: Cek vertikal
-// DONE: Cek horizontal
-// DONE: Cek regional/box
-// TODO: Buat fungsi isWin
-// TODO: Pisah fungsi Print dan Input ke masing-masing fungsi
-// TODO: Buat logika Health dan validasi dengan fungsi gameOver
-// TODO: Buat Struct player
-// TODO: Warna pada SOAL(Default), JAWABAN JIKA BENAR(Green), JAWABAN JIKA SALAH(Red)
-
 /*
-FLOW
-1.  Main Menu, input username, jika nama sudah ada, beri pilihan buat akun baru dengan nama lain, atau
-    main sebagai user itu.
-2.  Jika didalam user itu sudah ada permainan sebelumnya, berikan 2 pilihan, newGame, atau loadGame,
-    dan jikalau user memilih loadGame, maka panggil fungsi load untuk mengambil file save .txt dari
-    user tersebut. **file save tiap tiap user terpisah
-3.  Jika newGame, panggil fungsi generateBoard untuk menginisiasi soal Sudoku yang baru, dengan mengacak
-    template soal-soal yang sudah ada.
-4.  User dapat memainkan permainan dengan 3 nyawa, jika nyawa habis, gameOver, lalu system pause dan
-    kembali ke Main Menu.
+  TASK
+
+DONE: Buat fungsi save ke file .txt
+DONE: Buat fungsi load dari file .txt
+DONE: Perbaiki fungsi play
+DONE: Cek vertikal
+DONE: Cek horizontal
+DONE: Cek regional/box
+DONE: Buat fungsi isWin
+DONE: Buat fungsi isCase
+DONE: Buat fungsi gameOver
+DONE: Buat Struct player
+DONE: Warna pada SOAL(Default)
 */
 
-int sudoku[N][N];
-bool isPlay = false;
+/*
+  GAME FLOW
+
+1.  Main Menu, input username, jika nama sudah ada, beri pilihan buat akun baru
+    dengan nama lain, atau main sebagai user itu.
+2.  Jika didalam user itu sudah ada permainan sebelumnya, berikan 2 pilihan,
+    newGame, atau loadGame, dan jikalau user memilih loadGame, maka panggil
+    fungsi load untuk mengambil file save .txt dari user tersebut.
+    **file save tiap tiap user terpisah
+3.  Jika newGame, panggil fungsi generateBoard untuk menginisiasi soal Sudoku yang
+    baru, dengan mengacak template soal-soal yang sudah ada.
+*/
 
 void menu();
-void play();
-void printSudoku(int sudoku[N][N]);
-bool isValidNumber(int number);
 
-bool isInRow(int row, int number);
-bool isInCol(int col, int number);
-bool isInBox(int boxStartRow, int boxStartCol, int number);
-bool isEmpty(int row, int col);
-bool isValidAnswer(int row, int col, int number);
-
-void menu()
+struct player
 {
-  if (!isPlay)
-  {
-    cout << "Sudoku\n\n";
-    cout << "1. Play\n";
-    cout << "0. Exit\n";
+  string username;
+  string sudokuCase;
+  int sudoku[SONGO][SONGO];
+};
 
-    int choice;
-    cout << "Enter your choice: ";
-    cin >> choice;
-    switch (choice)
-    {
-    case 1:
-    {
-      isPlay = true;
-      play();
-      break;
-    }
-
-    case 0:
-    {
-      exit(0);
-      break;
-    }
-
-    default:
-      break;
-    }
-  }
-  else
-  {
-    play();
-  }
-}
-
-void play()
+void play(player player)
 {
   while (true)
   {
     system("cls");
-    printSudoku(sudoku);
-    cout << "\nInput your choice: [X Y] (1 >= X, Y <= 9)\n";
+    int sudokuCase[SONGO][SONGO];
+    getCase(sudokuCase, player.sudokuCase);
+
+    printSudoku(player.sudoku, sudokuCase);
+    if (isWin(player.sudoku))
+      break;
+
+    cout << "[X Y] (1 >= X, Y <= 9) || [0 to exit]\n";
     int row, col;
-    cin >> col >> row;
-    if (!isEmpty(row, col))
+
+    cin >> col;
+    if (col == 0)
     {
+      saveCase(player.sudoku, player.sudokuCase, player.username);
+      break;
+    }
+    cin >> row;
+
+    if (isCase(sudokuCase, row - 1, col - 1))
       continue;
-    }
 
-    cout << "Input your number: [number] (1 >= number <= 9)\n";
-    int number;
-    cin >> number;
-    if (isValidNumber(number))
+    cout << "[answer] (1 >= answer <= 9)\n";
+    int answer;
+    cin >> answer;
+    if (isValidNumber(answer))
     {
-      if (isValidAnswer(row - 1, col - 1, number))
+      if (isValidAnswer(player.sudoku, row - 1, col - 1, answer))
       {
-        sudoku[row - 1][col - 1] = number;
+        player.sudoku[row - 1][col - 1] = answer;
       }
     }
   }
+
+  if (isWin(player.sudoku))
+    cout << "You Win!\n";
+  else
+    menu();
 }
 
-void printSudoku(int sudoku[N][N])
+void newGame()
 {
-  int y = 1;
-  for (int row = 0; row < N; row++)
+  player newPlayer;
+
+  string username;
+  cout << "[username]\t: ";
+  cin >> username;
+  newPlayer.username = username;
+
+  string sudokuCase = randomCase();
+  newPlayer.sudokuCase = sudokuCase;
+
+  getCase(newPlayer.sudoku, sudokuCase);
+  play(newPlayer);
+}
+
+void loadGame()
+{
+  player loadPlayer;
+
+  string username;
+  cout << "[username]\t: ";
+  cin >> username;
+
+  loadPlayer.sudokuCase = loadCase(loadPlayer.sudoku, username);
+  if (loadPlayer.sudokuCase == "")
   {
-    if (row == 0)
-    {
-      for (int x = 0; x < N; x++)
-      {
-        if (x == 0)
-          cout << "   X ";
-
-        if (x == 3 || x == 6)
-          cout << " ";
-
-        cout << " " << x + 1 << " ";
-      }
-
-      cout << "\nY  \n\n";
-    }
-
-    for (int col = 0; col < N; col++)
-    {
-      if (col == 0)
-      {
-        cout << y << "    ";
-        y++;
-      }
-      if (col == 3 || col == 6)
-        cout << "|";
-      cout << " " << sudoku[row][col] << " ";
-    }
-    if (row == 2 || row == 5)
-    {
-      cout << "\n      ";
-      for (int i = 0; i < N; i++)
-        cout << "---";
-    }
-    cout << "\n";
+    menu();
+  }
+  else
+  {
+    loadPlayer.username = username;
+    play(loadPlayer);
   }
 }
 
-bool isValidNumber(int number)
+void menu()
 {
-  if (number >= 1 && number <= 9)
-    return true;
-  else
-    return false;
-}
+  system("CLS");
+  cout << "Sudoku\n\n";
+  cout << "1. New Game\n";
+  cout << "2. Load Game\n";
+  cout << "0. Exit\n";
 
-bool isInRow(int row, int number)
-{
-  for (int col = 0; col < N; col++)
-    if (sudoku[row][col] == number)
-      return true;
-  return false;
-}
+  int in;
+  cout << "[Input]\t: ";
+  cin >> in;
+  switch (in)
+  {
+  case 1:
+  {
+    newGame();
+    break;
+  }
 
-bool isInCol(int col, int number)
-{
-  for (int row = 0; row < N; row++)
-    if (sudoku[row][col] == number)
-      return true;
-  return false;
-}
+  case 2:
+  {
+    loadGame();
+    break;
+  }
 
-bool isInBox(int boxStartRow, int boxStartCol, int number)
-{
-  for (int row = 0; row < 3; row++)
-    for (int col = 0; col < 3; col++)
-      if (sudoku[row + boxStartRow][col + boxStartCol] == number)
-        return true;
-  return false;
-}
+  case 0:
+  {
+    exit(0);
+    break;
+  }
 
-bool isEmpty(int row, int col)
-{
-  if (sudoku[row][col] == 0)
-    return true;
-  else
-    return false;
-}
-
-bool isValidAnswer(int row, int col, int number)
-{
-  return !isInRow(row, number) && !isInCol(col, number) && !isInBox(row - row % 3, col - col % 3, number);
+  default:
+    break;
+  }
 }
 
 int main()
 {
-  system("CLS");
   menu();
 
   return 0;
