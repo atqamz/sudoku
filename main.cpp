@@ -64,7 +64,7 @@ void play(player player)
       if (isLose(player.health))
         break;
 
-      cout << "[X Y] (1 >= X, Y <= 9) || [0 to exit]\n";
+      cout << "[X Y] (1 >= X, Y <= 9) || [0 to save and exit]\n";
       int row, col;
 
       cin >> col;
@@ -99,11 +99,18 @@ void play(player player)
   }
 
   if (isWin(player.sudoku))
-    cout << "You Win!\n";
-  else if (isLose(player.health))
-    cout << "Game Over\n";
-  else
+    cout << "You Win!\n\n";
+  if (isLose(player.health))
+    cout << "Game Over\n\n";
+
+  cout << "\nDo you want to play again? [y/n] ";
+  char answer;
+  cin >> answer;
+  if (answer == 'y')
     menu();
+  else
+    cout << "Bye!\n";
+  system("pause");
 }
 
 void newGame()
